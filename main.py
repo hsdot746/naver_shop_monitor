@@ -3,6 +3,7 @@ import json
 import requests
 from datetime import datetime
 import time
+import sys # 로그 강제 출력을 위해 추가
 
 # 1. API 키 설정
 NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID")
@@ -10,14 +11,14 @@ NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
-# 2. 🎯 최종 타겟 설정 (단어를 하나로 합쳤습니다)
+# 2. 🎯 모니터링 타겟 설정
 SEARCH_TARGETS = [
     {"keyword": "포켓몬카드 닌자스피너", "min_price": 27000, "max_price": 30000}
 ]
 
 # 3. 데이터 최적화 설정
-DISPLAY_COUNT = 100   # 1페이지당 100개 수집
-MAX_ITEMS = 100       # 최대 100개까지만 수집 (API 1회 호출로 비용 최소화)
+DISPLAY_COUNT = 100
+MAX_ITEMS = 100
 HISTORY_FILE = "history.json"
 
 def send_telegram_message(message):
@@ -30,7 +31,6 @@ def get_naver_shopping_data(keyword):
     all_items = []
     
     for start_idx in range(1, MAX_ITEMS + 1, DISPLAY_COUNT):
-        # sort를 다시 "date"(최신순)으로 고정하여 신규 상품만 잡도록 합니다.
         params = {"query": keyword, "display": DISPLAY_COUNT, "start": start_idx, "sort": "date"}
         res = requests.get(url, headers=headers, params=params)
         
@@ -38,7 +38,9 @@ def get_naver_shopping_data(keyword):
             data = res.json().get('items', [])
             all_items.extend(data)
             if len(data) < DISPLAY_COUNT: break
-        else: break
+        else:
+            print(f"❌ 네이버 API 에러: {res.status_code}", flush=True)
+            break
         time.sleep(0.1)
     return all_items
 
@@ -54,7 +56,7 @@ def save_history(history_data):
         json.dump(history_data, f, ensure_ascii=False, indent=4)
 
 def main():
-    # 테스트용 정상 실행 알림
+    print(f"🚀 모니터링 프로세스를 시작합니다... ({datetime.now()})", flush=True)
     send_telegram_message("⚙️ 5분 주기 모니터링이 정상적으로 작동 중입니다.")
     
     history = load_history()
@@ -64,13 +66,16 @@ def main():
         keyword = target["keyword"]
         min_price = target["min_price"]
         max_price = target["max_price"]
+        
+        print(f"🔍 검색 중: {keyword} (가격 범위: {min_price}원 ~ {max_price}원)", flush=True)
         items = get_naver_shopping_data(keyword)
+        print(f"📦 수집된 전체 상품 수: {len(items)}개", flush=True)
         
         if keyword not in history:
             history[keyword] = []
             
         current_product_ids = []
-        new_items_found = False
+        new_items_count = 0
 
         for item in items:
             product_id = item.get('productId')
@@ -80,7 +85,7 @@ def main():
                 current_product_ids.append(product_id)
                 
                 if product_id not in history[keyword]:
-                    new_items_found = True
+                    new_items_count += 1
                     title = item.get('title').replace("<b>", "").replace("</b>", "")
                     link = item.get('link')
                     
@@ -92,13 +97,18 @@ def main():
                     )
                     send_telegram_message(message)
 
-        if new_items_found or not history[keyword]:
+        print(f"✨ 조건에 맞는 신규 상품 {new_items_count}개를 발견하여 알림을 보냈습니다.", flush=True)
+
+        if new_items_count > 0 or not history[keyword]:
             history[keyword].extend([pid for pid in current_product_ids if pid not in history[keyword]])
             history[keyword] = history[keyword][-MAX_ITEMS:]
             history_updated = True
 
     if history_updated:
         save_history(history)
+        print("💾 새로운 상품 이력을 저장했습니다.", flush=True)
+    
+    print("✅ 모니터링이 완료되었습니다.", flush=True)
 
 if __name__ == "__main__":
     main()
