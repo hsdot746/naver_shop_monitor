@@ -51,6 +51,11 @@ def save_history(history_data):
         json.dump(history_data, f, ensure_ascii=False, indent=4)
 
 def main():
+    # --- 아래 한 줄을 추가하여 무조건 텔레그램 메시지가 오는지 테스트합니다 ---
+    send_telegram_message("⚙️ 모니터링 스크립트가 정상 실행되었습니다.")
+    
+    print(f"[{datetime.now()}] 모니터링 시작")
+    history = load_history()
     history = load_history()
     history_updated = False
 
