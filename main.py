@@ -56,8 +56,8 @@ def save_history(history_data):
         json.dump(history_data, f, ensure_ascii=False, indent=4)
 
 def main():
-    print(f"🚀 모니터링 프로세스를 시작합니다... ({datetime.now()})", flush=True)
-    send_telegram_message("⚙️ 5분 주기 모니터링이 정상적으로 작동 중입니다.")
+    #print(f"🚀 모니터링 프로세스를 시작합니다... ({datetime.now()})", flush=True)
+    #send_telegram_message("⚙️ 5분 주기 모니터링이 정상적으로 작동 중입니다.")
     
     history = load_history()
     history_updated = False
