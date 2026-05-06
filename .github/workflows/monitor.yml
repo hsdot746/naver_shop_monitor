@@ -2,7 +2,7 @@ name: Naver Shopping Monitor
 
 on:
   schedule:
-    - cron: '*/5 * * * *'  # 24시간 내내 5분마다 실행
+    - cron: '*/5 * * * *'
   workflow_dispatch:
 
 env:
@@ -31,6 +31,7 @@ jobs:
 
     - name: 스크립트 실행
       env:
+        PYTHONUNBUFFERED: "1" # 로그 실시간 출력을 위한 설정
         NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
         NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
