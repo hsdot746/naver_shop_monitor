@@ -4,18 +4,20 @@ import requests
 from datetime import datetime
 import time
 
+# 1. API 키 설정
 NAVER_CLIENT_ID = os.environ.get("NAVER_CLIENT_ID")
 NAVER_CLIENT_SECRET = os.environ.get("NAVER_CLIENT_SECRET")
 TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
+# 2. 🎯 최종 타겟 설정 (단어를 하나로 합쳤습니다)
 SEARCH_TARGETS = [
-    {"keyword": "포케몬카드 닌자스피너", "min_price": 27000, "max_price": 30000},
-    
+    {"keyword": "포켓몬카드 닌자스피너", "min_price": 27000, "max_price": 30000}
 ]
 
-DISPLAY_COUNT = 100   
-MAX_ITEMS = 300       
+# 3. 데이터 최적화 설정
+DISPLAY_COUNT = 100   # 1페이지당 100개 수집
+MAX_ITEMS = 100       # 최대 100개까지만 수집 (API 1회 호출로 비용 최소화)
 HISTORY_FILE = "history.json"
 
 def send_telegram_message(message):
@@ -28,6 +30,7 @@ def get_naver_shopping_data(keyword):
     all_items = []
     
     for start_idx in range(1, MAX_ITEMS + 1, DISPLAY_COUNT):
+        # sort를 다시 "date"(최신순)으로 고정하여 신규 상품만 잡도록 합니다.
         params = {"query": keyword, "display": DISPLAY_COUNT, "start": start_idx, "sort": "date"}
         res = requests.get(url, headers=headers, params=params)
         
@@ -51,11 +54,9 @@ def save_history(history_data):
         json.dump(history_data, f, ensure_ascii=False, indent=4)
 
 def main():
-    # --- 아래 한 줄을 추가하여 무조건 텔레그램 메시지가 오는지 테스트합니다 ---
-    send_telegram_message("⚙️ 모니터링 스크립트가 정상 실행되었습니다.")
+    # 테스트용 정상 실행 알림
+    send_telegram_message("⚙️ 5분 주기 모니터링이 정상적으로 작동 중입니다.")
     
-    print(f"[{datetime.now()}] 모니터링 시작")
-    history = load_history()
     history = load_history()
     history_updated = False
 
@@ -84,7 +85,7 @@ def main():
                     link = item.get('link')
                     
                     message = (
-                        f"🚨 <b>[{keyword}] 조건 부합 신규 상품</b>\n\n"
+                        f"🚨 <b>신규 소싱 감지</b>\n\n"
                         f"▪️ <b>상품명:</b> {title}\n"
                         f"▪️ <b>가격:</b> {price:,}원\n"
                         f"🔗 <a href='{link}'>바로가기</a>"
