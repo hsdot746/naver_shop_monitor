@@ -10,8 +10,8 @@ TELEGRAM_BOT_TOKEN = os.environ.get("TELEGRAM_BOT_TOKEN")
 TELEGRAM_CHAT_ID = os.environ.get("TELEGRAM_CHAT_ID")
 
 SEARCH_TARGETS = [
-    {"keyword": "닌자스피너", "min_price": 27000, "max_price": 30000},
-    {"keyword": "포켓몬카드", "min_price": 27000, "max_price": 30000}
+    {"keyword": "포케몬카드 닌자스피너", "min_price": 27000, "max_price": 30000},
+    
 ]
 
 DISPLAY_COUNT = 100   
